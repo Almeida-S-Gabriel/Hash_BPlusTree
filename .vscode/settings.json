@@ -1,0 +1,7 @@
+{
+   "java.project.sourcePaths": [
+      "src/BPlustree/model",
+      "src/BPlusTree/model",
+      "src"
+   ]
+}
