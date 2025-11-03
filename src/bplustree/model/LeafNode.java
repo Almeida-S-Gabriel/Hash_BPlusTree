@@ -60,7 +60,7 @@ public class LeafNode<T> extends Node {
 
     }
 
-    public LeafNode(int m, DictionaryPair[] dps, InternalNode parent){
+    public LeafNode(int m, DictionaryPair<T>[] dps, InternalNode parent){
         this.maxNumPairs = m - 1;
         this.minNumPairs = (int) (Math.ceil(m / 2) - 1);
         this.dictionary = dps;
