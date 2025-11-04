@@ -2,20 +2,20 @@ package bplustree.model;
 
 import java.util.Arrays;
 
-public class LeafNode<T> extends Node {
+public class LeafNode<K extends Comparable<K>, V> extends Node {
     int maxNumPairs;
     int minNumPairs;
     int numPairs;
-    LeafNode<T> leftSibling;
-    LeafNode<T> rightSibling;
-    DictionaryPair<T>[] dictionary;
+    LeafNode<K, V> leftSibling;
+    LeafNode<K,V> rightSibling;
+    DictionaryPair<K, V>[] dictionary;
     
     public void delete(int index) {
       this.dictionary[index] = null;
       numPairs--;
     }
 
-    public boolean insert(DictionaryPair<T> dp) {
+    public boolean insert(DictionaryPair<K,V> dp) {
       if (this.isFull()) {
         return false;
       } else {
@@ -52,16 +52,16 @@ public class LeafNode<T> extends Node {
     return -1;
   }
 
-    public LeafNode(int m, DictionaryPair<T> dp) {
+    public LeafNode(int m, DictionaryPair<K,V> dp) {
         this.maxNumPairs = m - 1;
         this.minNumPairs = (int) (Math.ceil(m / 2) - 1);
-        this.dictionary = (DictionaryPair<T>[]) new DictionaryPair[m];
+        this.dictionary = (DictionaryPair<K,V>[]) new DictionaryPair[m];
         this.numPairs = 0;
         this.insert(dp);
 
     }
 
-    public LeafNode(int m, DictionaryPair<T>[] dps, InternalNode parent){
+    public LeafNode(int m, DictionaryPair<K,V>[] dps, InternalNode parent){
         this.maxNumPairs = m - 1;
         this.minNumPairs = (int) (Math.ceil(m / 2) - 1);
         this.dictionary = dps;

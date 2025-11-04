@@ -2,7 +2,7 @@ package bplustree.model;
 
 public class Main {
     public static void main(String[] args) {
-        BBplusTree<Integer> bPlusTree = new BBplusTree<>(3);
+        BBplusTree<Integer, Integer> bPlusTree = new BBplusTree<>(3);
         
         System.out.println("=== INSERINDO VALORES ===");
         int[] valores = {10, 20, 5, 6, 12, 30, 7, 17};

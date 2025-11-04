@@ -1,16 +1,16 @@
 package bplustree.model;
 
-public class DictionaryPair<T> implements Comparable<DictionaryPair<T>> {
-    int key;  
-    T object;
+public class DictionaryPair<K extends Comparable<K>, V> implements Comparable<DictionaryPair<K, V>> {
+    K key;  
+    V value;
 
-    public DictionaryPair(T value, int key) {
+    public DictionaryPair(K key, V value) {
         this.key = key;
-        this.object = value;
+        this.value = value;
     }
 
     @Override
-    public int compareTo(DictionaryPair<T> o) {
-        return Integer.compare(this.key, o.key);
+    public int compareTo(DictionaryPair<K, V> o) {
+        return this.key.compareTo(o.key);
     }
 }

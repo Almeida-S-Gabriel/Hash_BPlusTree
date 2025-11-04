@@ -2,24 +2,25 @@ package bplustree.model;
 
 import java.util.Arrays;
 
-class SplitResult<T> {
+class SplitResult<K, V> {
     Node newNode;  
-    int newKey;    
+    K newKey;    
 }
 
-public class BBplusTree<T>  {
+public class BBplusTree<K extends Comparable<K>, V> {
    int m;
    Node  root;
-   LeafNode<T>  firstLeaf;
+   LeafNode<K, V>  firstLeaf;
 
-   private LeafNode findLeafRecursive(Node node, int key) {
+   private LeafNode<K, V> findLeafRecursive(Node node, K key) {
       if (node instanceof LeafNode leafNode) {
          return leafNode;
       }
 
       if (node instanceof InternalNode internalNode) {
+         InternalNode<K,V> internal = (InternalNode<K,V>) node;
          int i = 0;
-         while (i < internalNode.degree - 1 && key >= internalNode.keys[i]) {
+         while (i < internal.degree - 1 && key.compareTo(internal.keys[i]) >= 0) {
             i++;
          }
 
@@ -33,7 +34,7 @@ public class BBplusTree<T>  {
       return null;
    }
 
-   private LeafNode findLeafNode(int key) {
+   private LeafNode<K, V> findLeafNode(K key) {
       if (this.root == null) return this.firstLeaf;
          return findLeafRecursive(this.root, key);
    }
@@ -44,18 +45,18 @@ public class BBplusTree<T>  {
       this.firstLeaf = null;
    }
 
-   private LeafNode<T> splitDictionary(LeafNode<T> leaf, DictionaryPair<T> newDP) {
+   private LeafNode<K, V> splitDictionary(LeafNode<K, V> leaf, DictionaryPair<K, V> newDP) {
       int total = leaf.numPairs + 1;
-      DictionaryPair<T>[] temp = new DictionaryPair[total];
+      DictionaryPair<K, V>[] temp = new DictionaryPair[total];
       for (int i = 0; i < leaf.numPairs; i++) temp[i] = leaf.dictionary[i];
       temp[leaf.numPairs] = newDP;
 
-      Arrays.sort(temp, 0, total, (a, b) -> Integer.compare(a.key, b.key));
+      Arrays.sort(temp, 0, total, (a, b) -> a.key.compareTo(b.key));
 
       int midpoint = total / 2; 
 
-      DictionaryPair<T>[] newDict = (DictionaryPair<T>[]) new DictionaryPair[leaf.maxNumPairs + 1];
-      LeafNode<T> newLeaf = new LeafNode<T>(this.m, newDict, (InternalNode) leaf.parent);
+      DictionaryPair<K, V>[] newDict = (DictionaryPair<K, V>[]) new DictionaryPair[leaf.maxNumPairs + 1];
+      LeafNode<K, V> newLeaf = new LeafNode<K, V>(this.m, newDict, (InternalNode) leaf.parent);
 
       for (int i = 0; i < midpoint; i++) {
          leaf.dictionary[i] = temp[i];
@@ -80,67 +81,68 @@ public class BBplusTree<T>  {
    }
 
 
-   private SplitResult<T> splitInternalNode(InternalNode node, int newKey, Node newChild) {
-    int oldKeys = node.degree - 1;
-    int totalKeys = oldKeys + 1;
-    int totalPointers = node.degree + 1;
+   private SplitResult<K, V> splitInternalNode(InternalNode<K, V> node, K newKey, Node newChild) {
+      int oldKeys = node.degree - 1;
+      int totalKeys = oldKeys + 1;
+      int totalPointers = node.degree + 1;
 
-    Integer[] tempKeys = new Integer[totalKeys];
-    Node[] tempPointers = new Node[totalPointers];
+      K[] tempKeys = (K[]) new Comparable[totalKeys];
+      Node[] tempPointers = new Node[totalPointers];
 
-    for (int i = 0; i < oldKeys; i++) tempKeys[i] = node.keys[i];
-    for (int i = 0; i < node.degree; i++) tempPointers[i] = node.childPointers[i];
 
-    int insertPos = 0;
-    while (insertPos < oldKeys && newKey >= tempKeys[insertPos]) insertPos++;
+      for (int i = 0; i < oldKeys; i++) tempKeys[i] = node.keys[i];
+      for (int i = 0; i < node.degree; i++) tempPointers[i] = node.childPointers[i];
 
-    for (int i = oldKeys - 1; i >= insertPos; i--) tempKeys[i + 1] = tempKeys[i];
-    tempKeys[insertPos] = newKey;
+      int insertPos = 0;
+      while (insertPos < oldKeys && newKey.compareTo(tempKeys[insertPos]) >= 0) insertPos++;
 
-    for (int i = node.degree - 1; i >= insertPos + 1; i--) tempPointers[i + 1] = tempPointers[i];
-    tempPointers[insertPos + 1] = newChild;
+      for (int i = oldKeys - 1; i >= insertPos; i--) tempKeys[i + 1] = tempKeys[i];
+      tempKeys[insertPos] = newKey;
 
-    int midpointIndex = totalKeys / 2; 
+      for (int i = node.degree - 1; i >= insertPos + 1; i--) tempPointers[i + 1] = tempPointers[i];
+      tempPointers[insertPos + 1] = newChild;
 
-    int promoteKey = tempKeys[midpointIndex];
+      int midpointIndex = totalKeys / 2; 
 
-    int leftKeyCount = midpointIndex; 
-    int leftPointerCount = leftKeyCount + 1;
+      K promoteKey = tempKeys[midpointIndex];
 
-    Arrays.fill(node.keys, null);
-    Arrays.fill(node.childPointers, null);
+      int leftKeyCount = midpointIndex; 
+      int leftPointerCount = leftKeyCount + 1;
 
-    for (int i = 0; i < leftKeyCount; i++) node.keys[i] = tempKeys[i];
-    for (int i = 0; i < leftPointerCount; i++) node.childPointers[i] = tempPointers[i];
-    node.degree = leftPointerCount;
+      Arrays.fill(node.keys, null);
+      Arrays.fill(node.childPointers, null);
 
-    Integer[] rightKeys = new Integer[node.maxDegree - 1];
-    Node[] rightPointers = new Node[node.maxDegree];
+      for (int i = 0; i < leftKeyCount; i++) node.keys[i] = tempKeys[i];
+      for (int i = 0; i < leftPointerCount; i++) node.childPointers[i] = tempPointers[i];
+      node.degree = leftPointerCount;
 
-    int rightKeyIndex = 0;
-    for (int i = midpointIndex + 1; i < totalKeys; i++) {
-        rightKeys[rightKeyIndex++] = tempKeys[i];
-    }
-    int rightPointerIndex = 0;
-    for (int i = midpointIndex + 1; i < totalPointers; i++) {
-        rightPointers[rightPointerIndex++] = tempPointers[i];
-    }
+      K[] rightKeys = (K[]) new Comparable[node.maxDegree - 1];
+      Node[] rightPointers = new Node[node.maxDegree];
 
-    InternalNode newNode = new InternalNode(node.maxDegree, rightKeys, rightPointers);
-    newNode.parent = node.parent;
-    for (int i = 0; i < rightPointerIndex; i++) {
-        if (newNode.childPointers[i] != null) newNode.childPointers[i].parent = newNode;
-    }
+      int rightKeyIndex = 0;
+      for (int i = midpointIndex + 1; i < totalKeys; i++) {
+         rightKeys[rightKeyIndex++] = tempKeys[i];
+      }
+      int rightPointerIndex = 0;
+      for (int i = midpointIndex + 1; i < totalPointers; i++) {
+         rightPointers[rightPointerIndex++] = tempPointers[i];
+      }
 
-    SplitResult<T> result = new SplitResult<>();
-    result.newNode = newNode;
-    result.newKey = promoteKey;
-    return result;
+      InternalNode<K, V> newNode = new InternalNode<>(node.maxDegree, rightKeys, rightPointers);
+      newNode.parent = node.parent;
+      for (int i = 0; i < rightPointerIndex; i++) {
+         if (newNode.childPointers[i] != null) newNode.childPointers[i].parent = newNode;
+      }
+
+      SplitResult<K,V> result = new SplitResult<>();
+      result.newNode = newNode;
+      result.newKey = promoteKey;
+      return result;
 }
 
-   private void insertIntoInternalNode(InternalNode node, int newKey, Node newChild) {
+   private void insertIntoInternalNode(InternalNode<K,V> node, K newKey, Node newChild) {
       int insertPos = 0;
-      while (insertPos < node.degree - 1 && newKey >= node.keys[insertPos]) {
+      while (insertPos < node.degree - 1 && newKey.compareTo(node.keys[insertPos]) >= 0) {
          insertPos++;
       }
 
@@ -159,44 +161,44 @@ public class BBplusTree<T>  {
       node.degree++;
    }
 
-   public void insert(T value, int key) {
-    if (this.root == null) {
-        LeafNode<T> newLeaf = new LeafNode<T>(m,new DictionaryPair<T>(value, key));
-        this.firstLeaf = newLeaf;
-        this.root = newLeaf;
-        return;
-    }
+   public void insert(V value, K key) {
+      if (this.root == null) {
+            LeafNode<K, V> newLeaf = new LeafNode<>(m, new DictionaryPair<>(key, value));
+            this.firstLeaf = newLeaf;
+            this.root = newLeaf;
+            return;
+      }
 
-    SplitResult<T> splitResult = insertSplitRecursive(this.root, value, key);
+      SplitResult<K, V> splitResult = insertSplitRecursive(this.root, key, value);
     
-    if (splitResult != null) {
-        Integer[] rootKeys = new Integer[m - 1];
-        Node[] rootPointers = new Node[m];
-        
-        rootKeys[0] = splitResult.newKey;
-        rootPointers[0] = this.root;      
-        rootPointers[1] = splitResult.newNode; 
-        
-        InternalNode newRoot = new InternalNode(m, rootKeys, rootPointers);
-        newRoot.degree = 2;
-        
-        this.root.parent = newRoot;
-        if (splitResult.newNode != null) {
-            splitResult.newNode.parent = newRoot;
-        }
-        
-        this.root = newRoot;
-    }
-}
+      if (splitResult != null) {
+         K[] rootKeys = (K[]) new Comparable[m - 1];
+         Node[] rootPointers = new Node[m];
+         
+         rootKeys[0] = splitResult.newKey;
+         rootPointers[0] = this.root;      
+         rootPointers[1] = splitResult.newNode; 
+         
+         InternalNode newRoot = new InternalNode(m, rootKeys, rootPointers);
+         newRoot.degree = 2;
+         
+         this.root.parent = newRoot;
+         if (splitResult.newNode != null) {
+               splitResult.newNode.parent = newRoot;
+         }
+         
+         this.root = newRoot;
+      }
+   }
 
-   private SplitResult<T>  insertSplitRecursive(Node root,T obj, int key) {
+   private SplitResult<K,V>  insertSplitRecursive(Node root, K key, V value) {
       if (root instanceof LeafNode) {
-        LeafNode<T> leaf = (LeafNode<T>) root;
-        if(leaf.insert(new DictionaryPair<T>(obj, key))){
+        LeafNode<K,V> leaf = (LeafNode<K,V>) root;
+        if(leaf.insert(new DictionaryPair<K,V>(key, value))){
             return null;
          } else {
-            LeafNode<T> newLeaf = splitDictionary(leaf,(new DictionaryPair<T>(obj, key)));
-            SplitResult<T> splitResult = new SplitResult<T>();
+            LeafNode<K,V> newLeaf = splitDictionary(leaf,(new DictionaryPair<K,V>(key, value)));
+            SplitResult<K,V> splitResult = new SplitResult<K,V>();
             splitResult.newNode = newLeaf;
             splitResult.newKey = newLeaf.dictionary[0].key;
             return splitResult;
@@ -204,14 +206,15 @@ public class BBplusTree<T>  {
       }
 
       if (root instanceof InternalNode internalNode) {
+         InternalNode<K,V> internal = (InternalNode<K,V>) root;
          int i = 0;
-         while (i < internalNode.degree - 1 && key >= internalNode.keys[i]) {
+         while (i < internal.degree - 1 && key.compareTo(internal.keys[i]) >= 0) {
             i++;
          }
 
          Node child = internalNode.childPointers[i];
          if(child != null) {
-            SplitResult<T> splitResult =  insertSplitRecursive(internalNode.childPointers[i], obj, key);
+            SplitResult<K,V> splitResult =  insertSplitRecursive(internalNode.childPointers[i], key, value);
             if (splitResult != null) {
                if (internalNode.degree < internalNode.maxDegree) {
                   insertIntoInternalNode(internalNode, splitResult.newKey, splitResult.newNode);
@@ -226,6 +229,9 @@ public class BBplusTree<T>  {
       return null;
    
    }
+
+   
+   
    public void printTree() {
       if (root == null) {
          System.out.println("Árvore vazia");
@@ -267,7 +273,7 @@ public class BBplusTree<T>  {
          return;
       }
       
-      LeafNode<T> current = firstLeaf;
+      LeafNode<K,V> current = firstLeaf;
       int leafCount = 0;
       
       while (current != null) {
