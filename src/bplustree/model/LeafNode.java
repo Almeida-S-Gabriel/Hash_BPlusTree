@@ -9,6 +9,7 @@ public class LeafNode<T> extends Node {
     LeafNode<T> leftSibling;
     LeafNode<T> rightSibling;
     DictionaryPair<T>[] dictionary;
+    
     public void delete(int index) {
       this.dictionary[index] = null;
       numPairs--;

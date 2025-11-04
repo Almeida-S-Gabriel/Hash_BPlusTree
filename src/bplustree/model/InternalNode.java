@@ -4,8 +4,8 @@ public class InternalNode extends Node {
    int maxDegree;
    int minDegree;
    int degree;
-   InternalNode leftSibling;
-   InternalNode rightSibling;
+   InternalNode  leftSibling;
+   InternalNode  rightSibling;
    Integer[] keys;
    Node[] childPointers;
 
@@ -34,7 +34,7 @@ public class InternalNode extends Node {
     return -1;
   }
  
-  private InternalNode(int m, Integer[] keys) {
+  public InternalNode (int m, Integer[] keys) {
       this.maxDegree = m;
       this.minDegree = (int) Math.ceil(m / 2.0);
       this.degree = 0;
@@ -42,7 +42,7 @@ public class InternalNode extends Node {
       this.childPointers = new Node[this.maxDegree + 1];
     }
 
-  private InternalNode(int m, Integer[] keys, Node[] pointers) {
+  public InternalNode(int m, Integer[] keys, Node[] pointers) {
       this.maxDegree = m;
       this.minDegree = (int) Math.ceil(m / 2.0);
       this.degree = linearNullSearch(pointers);
