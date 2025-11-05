@@ -10,6 +10,7 @@ public class InternalNode<K extends Comparable<K>, V> extends Node {
     Node[] childPointers;
     InternalNode<K, V> parent;
 
+    @Override
     public boolean isDeficient() {
         return degree < minDegree;
     }
@@ -18,6 +19,7 @@ public class InternalNode<K extends Comparable<K>, V> extends Node {
         return degree == maxDegree;
     }
 
+    @Override
     public boolean isLendable() {
         return degree > minDegree;
     }
@@ -32,6 +34,8 @@ public class InternalNode<K extends Comparable<K>, V> extends Node {
         }
         return pointers.length;
     }
+
+    
 
     public InternalNode(int m, K[] keys) {
         this.maxDegree = m;

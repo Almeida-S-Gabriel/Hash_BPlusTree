@@ -2,31 +2,43 @@ package bplustree.model;
 
 public class Main {
     public static void main(String[] args) {
+      
         BBplusTree<Integer, Integer> bPlusTree = new BBplusTree<>(3);
         
-        System.out.println("=== INSERINDO VALORES ===");
+        System.out.println("=== INSERINDO VALORES (m=3) ===");
         int[] valores = {10, 20, 5, 6, 12, 30, 7, 17};
         for (int valor : valores) {
-            System.out.println("Inserindo: " + valor);
             bPlusTree.insert(valor, valor);
         }
         
-        System.out.println("\n=== ESTRUTURA DA B+ TREE ===");
+        System.out.println("\n=== ESTRUTURA INICIAL COMPLETA ===");
         bPlusTree.printTree();
-        
-        System.out.println("\n=== TODAS AS FOLHAS EM SEQUÊNCIA ===");
         bPlusTree.printAllLeaves();
         
-        System.out.println("\n=== TESTES ADICIONAIS ===");
+        System.out.println("\n\n=== REMOVENDO 17 (Remoção Simples) ===");
+        bPlusTree.remove(17);
+        bPlusTree.printTree();
+    
+        System.out.println("\n\n=== REMOVENDO 12 (Causa Borrow de Folha) ===");
+        bPlusTree.remove(12);
+        bPlusTree.printTree();
         
-        if (bPlusTree.root instanceof InternalNode) {
-            System.out.println("✓ Raiz é InternalNode (correto!)");
-        } else {
-            System.out.println("✗ Raiz deveria ser InternalNode mas é: " + bPlusTree.root.getClass().getSimpleName());
-        }
+        System.out.println("\n\n=== REMOVENDO 7 (Prepara para o Merge) ===");
+        bPlusTree.remove(7);
+        bPlusTree.printTree();
         
-        if (bPlusTree.firstLeaf != null) {
-            System.out.println("✓ FirstLeaf existe");
-        }
+        System.out.println("\n\n=== REMOVENDO 6 (Causa Merge de Folha) ===");
+        bPlusTree.remove(6);
+        bPlusTree.printTree();
+    
+        System.out.println("\n\n=== REMOVENDO 20 (Causa Merge Interno) ===");
+        bPlusTree.remove(20);
+        bPlusTree.printTree();
+        
+        System.out.println("\n\n=== ESTADO FINAL (APÓS RAIZ ENCOLHER) ===");
+        bPlusTree.printTree();
+        
+        System.out.println("\n\n=== TESTE DE FOLHAS FINAL ===");
+        bPlusTree.printAllLeaves();
     }
 }

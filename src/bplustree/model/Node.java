@@ -1,5 +1,9 @@
 package bplustree.model;
 
-public class Node {
+public abstract class Node {
    Node parent;
+
+public abstract boolean isDeficient();
+
+public abstract boolean isLendable();
 }

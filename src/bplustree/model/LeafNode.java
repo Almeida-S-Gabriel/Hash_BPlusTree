@@ -27,6 +27,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node {
       }
     }
 
+    @Override
     public boolean isDeficient() {
       return numPairs < minNumPairs;
     }
@@ -35,6 +36,7 @@ public class LeafNode<K extends Comparable<K>, V> extends Node {
       return numPairs == maxNumPairs;
     }
 
+    @Override
     public boolean isLendable() {
       return numPairs > minNumPairs;
     }
@@ -52,21 +54,48 @@ public class LeafNode<K extends Comparable<K>, V> extends Node {
     return -1;
   }
 
+    public boolean remove(K key) {
+      int index = -1;
+
+      for (int i = 0; i < numPairs; i++) {
+          if (dictionary[i] != null && dictionary[i].key.compareTo(key) == 0) {
+              index = i;
+              break;
+          }
+      }
+
+      if (index == -1) {
+          return false;
+      }
+
+      for (int i = index; i < numPairs - 1; i++) {
+          dictionary[i] = dictionary[i + 1];
+      }
+
+      dictionary[numPairs - 1] = null;
+      numPairs--;
+
+      return true;
+  }
+
+
+
+
+
     public LeafNode(int m, DictionaryPair<K,V> dp) {
-        this.maxNumPairs = m - 1;
-        this.minNumPairs = (int) (Math.ceil(m / 2) - 1);
-        this.dictionary = (DictionaryPair<K,V>[]) new DictionaryPair[m];
-        this.numPairs = 0;
-        this.insert(dp);
+      this.maxNumPairs = m - 1;
+      this.minNumPairs = (int) (Math.ceil(m / 2.0) - 1);
+      this.dictionary = (DictionaryPair<K,V>[]) new DictionaryPair[m];
+      this.numPairs = 0;
+      this.insert(dp);
 
     }
 
     public LeafNode(int m, DictionaryPair<K,V>[] dps, InternalNode parent){
-        this.maxNumPairs = m - 1;
-        this.minNumPairs = (int) (Math.ceil(m / 2) - 1);
-        this.dictionary = dps;
-        this.numPairs = linearNullSearch(dps);
-        this.parent = parent;
+      this.maxNumPairs = m - 1;
+      this.minNumPairs = (int) (Math.ceil(m / 2.0) - 1);      this.dictionary = dps;
+      this.numPairs = linearNullSearch(dps);
+      this.parent = parent;
     }
 
 
