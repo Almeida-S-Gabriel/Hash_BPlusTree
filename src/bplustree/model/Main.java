@@ -35,7 +35,13 @@ public class Main {
         bPlusTree.remove(20);
         bPlusTree.printTree();
         
-        System.out.println("\n\n=== ESTADO FINAL (APÓS RAIZ ENCOLHER) ===");
+        System.out.println("\n\n=== ESTADO ATUAL (ANTES DO TESTE FINAL) ===");
+        System.out.println("A 'chave morta' 12 está aqui, como 'placa'.");
+        bPlusTree.printTree();
+        
+        // --- AQUI ESTÁ O NOVO TESTE ---
+        System.out.println("\n\n=== REMOVENDO 30 (Força o merge de Leaf[10] e Leaf[30], matando a 'placa' 12) ===");
+        bPlusTree.remove(30);
         bPlusTree.printTree();
         
         System.out.println("\n\n=== TESTE DE FOLHAS FINAL ===");

@@ -417,9 +417,9 @@ public class BBplusTree<K extends Comparable<K>, V> {
       parent.degree--;
    }
 
-   public void remove(K key) {
+   public boolean remove(K key) {
       if (this.root == null) {
-         return; 
+         return false; 
       }
 
       deleteRecursive(this.root, key);
@@ -431,6 +431,8 @@ public class BBplusTree<K extends Comparable<K>, V> {
          }
          this.root = newRoot;
       }
+      return true;
+
    }
 
    private void handleDeficiency(InternalNode<K,V> parent, int childIndex) {
@@ -483,34 +485,65 @@ public class BBplusTree<K extends Comparable<K>, V> {
 
    private void deleteRecursive(Node node, K key) {
     
-    if (node instanceof LeafNode) {
-        LeafNode<K,V> leaf = (LeafNode<K,V>) node;
-        
-        leaf.remove(key);
-        return;
-    }
-    
-    if (node instanceof InternalNode) {
-        InternalNode<K,V> internal = (InternalNode<K,V>) node;
-        
-        int i = 0;
-        while (i < internal.degree - 1 && key.compareTo(internal.keys[i]) >= 0) {
-            i++;
-        }
-        
-        Node child = internal.childPointers[i];
+      if (node instanceof LeafNode) {
+         LeafNode<K,V> leaf = (LeafNode<K,V>) node;
+         
+         boolean removed = leaf.remove(key);
+         if (!removed) return;
+         if(leaf.numPairs > 0 && leaf.parent != null){
+            if (leaf.numPairs > 0 && leaf.parent != null) {
+               InternalNode<K,V> parent = (InternalNode<K,V>) leaf.parent;
+               int indexInParent = 0;
+               while (indexInParent < parent.degree && parent.childPointers[indexInParent] != leaf) {
+                     indexInParent++;
+               }
+               if (indexInParent > 0) {
+                     parent.keys[indexInParent - 1] = leaf.dictionary[0].key;
+               }
+            }
+         }
+         
+         return;
+      }
+      
+      if (node instanceof InternalNode) {
+         InternalNode<K,V> internal = (InternalNode<K,V>) node;
+         
+         int i = 0;
+         while (i < internal.degree - 1 && key.compareTo(internal.keys[i]) >= 0) {
+               i++;
+         }
+         
+         Node child = internal.childPointers[i];
 
-        if (child == null) {
-            return;
-        }
+         if (child == null) {
+               return;
+         }
 
-        deleteRecursive(child, key);
-        
-        if (child.isDeficient()) {
-            handleDeficiency(internal, i);
-        }
-    }
-}
+         deleteRecursive(child, key);
+         
+         if (child.isDeficient()) {
+               handleDeficiency(internal, i);
+         }
+      }
+   }
+
+   public V search(K key) {
+      LeafNode<K, V> leaf = findLeafNode(key);
+      if (leaf == null) return null;
+
+      for (int i = 0; i < leaf.numPairs; i++) {
+         DictionaryPair<K, V> pair = leaf.dictionary[i];
+         if (pair != null && pair.key.compareTo(key) == 0) {
+               return pair.value;
+         }
+      }
+
+      return null;
+   }
+
+
+
 
    public void printTree() {
       if (root == null) {
@@ -574,6 +607,5 @@ public class BBplusTree<K extends Comparable<K>, V> {
 
 
 }
-
 
 
