@@ -78,23 +78,81 @@ public class ExtendibleHashing<K extends Comparable<K>, V> {
       int newLocalDepth = fullBucket.getLocalDepth();
       Bucket<K, V> newBucket = new Bucket<>(bucketCapacity, newLocalDepth);
 
-      int pairIndex = bucketIndex ^ (1 << (newLocalDepth - 1));
-      int stride = 1 << newLocalDepth;
-
-      for (int i = pairIndex; i < directory.size(); i += stride) {
-            directory.set(i, newBucket);
+      for (int i = 0; i < directory.size(); i++) {
+         if (directory.get(i) == fullBucket) {
+            int mask = 1 << (newLocalDepth - 1);
+            if ((i & mask) != 0) {
+                  directory.set(i, newBucket);
+            }
+         }
       }
+
       for (DictionaryPair<K, V> pair : oldPairs) {
          insert(pair.key, pair.value);
       }
    }
     
-   
+  
+   private void tryShrink() {
+      if (globalDepth == 1) {
+         return;
+      }  
+
+      boolean canShrink = true;
+        
+      for (Bucket<K, V> bucket : directory) {
+         if (bucket.getLocalDepth() == globalDepth) {
+            canShrink = false;
+            break;
+         }
+      }
+
+      if (canShrink) {
+         globalDepth--;
+            
+         int oldSize = directory.size(); 
+         int newSize = oldSize / 2;    
+         for (int i = oldSize - 1; i >= newSize; i--) {
+             directory.remove(i);
+         }
+      }  
+   }
+
+   private void tryMerge(int bucketIndex, Bucket<K, V> emptyBucket) {
+      int localDepth = emptyBucket.getLocalDepth();
+      
+      int siblingIndex = bucketIndex ^ (1 << (localDepth - 1));
+      Bucket<K, V> siblingBucket = directory.get(siblingIndex);
+      
+      if (localDepth == siblingBucket.getLocalDepth()) {
+            
+         for (int i = 0; i < directory.size(); i++) {
+            if (directory.get(i) == emptyBucket) {
+               directory.set(i, siblingBucket);
+            }
+         }
+ 
+         siblingBucket.setLocalDepth(localDepth - 1);
+         tryShrink();
+      }
+   }
+
    public boolean remove(K key) {
-      int index = getDirectoryIndex(key);
-      Bucket<K, V> bucket = directory.get(index);
-      return bucket.remove(key);
-    }
+        int index = getDirectoryIndex(key);
+        Bucket<K, V> bucket = directory.get(index);
+
+      if (!bucket.remove(key)) {
+         return false;
+      }
+
+      if (bucket.isEmpty() && bucket.getLocalDepth() > 1) {
+         tryMerge(index, bucket); 
+      }
+
+      return true;
+ 
+   }
+
 
   
    public void printStructure() {

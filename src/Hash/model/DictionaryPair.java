@@ -13,4 +13,9 @@ public class DictionaryPair<K extends Comparable<K>, V> implements Comparable<Di
     public int compareTo(DictionaryPair<K, V> o) {
         return this.key.compareTo(o.key);
     }
+
+    @Override
+    public String toString() {
+        return "(" + key + ":" + value + ")";
+    }
 }
